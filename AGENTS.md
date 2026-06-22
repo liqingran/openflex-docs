@@ -1,0 +1,261 @@
+[官方文档](http://docs.openarmx.com/) | [GitHub 组织](https://github.com/openarmx)
+
+![OpenFlex 封面](./assets/cover.png)
+
+OpenFlex 是由成都长数机器人有限公司开发的开源全身人形机器人平台，基于 ROS 2 构建，集成双臂、移动底盘、升降台和头部系统，覆盖从机器人描述、底层驱动、VR遥操作到自主导航的完整技术栈。本页汇总了平台核心软件包的关键信息，帮助开发者快速定位所需模块。
+
+## 包索引
+
+| 包名 | 简述 |
+| --- | --- |
+| [openflex\_integrated](#openflex_integrated) | 全身人形机器人集成系统 |
+| [openflex\_chassis](#openflex_chassis) | 移动底盘与传感器子系统 |
+| [openflex\_head](#openflex_head) | 2自由度头部子系统 |
+| [openflex\_lift\_slide](#openflex_lift_slide) | 升降台子系统 |
+| [openflex\_armx](#openflex_armx) | 双7自由度机械臂子系统 |
+| [openflex\_vr\_bridge](#openflex_vr_bridge) | Pico VR姿态桥接 |
+| [openflex\_moveit\_nav2](#openflex_moveit_nav2) | MoveIt2与Nav2集成 |
+| [openflex\_vla](#openflex_vla) | VLA数据采集与训练 |
+
+## openflex\_integrated
+
+### 概述
+
+OpenFlex 全身人形机器人集成系统，整合双臂、底盘、升降台和头部四大子系统，提供统一的启动、控制和管理接口。
+
+### 包含内容
+
+- `openarmx_integrated_bringup`：全身系统启动文件，支持真实硬件和仿真模式
+- `openarmx_integrated_description`：完整机器人URDF/Xacro描述，包含所有子系统的运动学和动力学模型
+- `openflex_gui`：基于Qt5的全身机器人图形化控制面板
+- `openflex_manager`：系统管理器，提供各子系统的控制接口和状态监控
+- 集成VR遥操作启动文件 `integrated_vr_teleop.launch.py`
+- 支持模块化启动：可独立启动各子系统或全身集成
+
+### 应用场景
+
+- 启动完整OpenFlex机器人进行全身控制
+- VR沉浸式遥操作全身系统（双臂\+底盘\+头部）
+- GUI图形化控制和系统状态监控
+- 仿真环境下的全身运动规划和测试
+
+### 技术特性
+
+- ros2\_control框架统一管理所有关节控制器
+- 自动配置文件检测和创建（相机、雷达）
+- 支持fake\_hardware仿真模式
+- 100Hz控制频率
+
+## openflex\_chassis
+
+### 概述
+
+OpenFlex移动底盘与传感器子系统，采用四轮独立转向全向驱动，集成Livox MID-360激光雷达，支持FAST-LIO2 SLAM和Nav2自主导航。
+
+### 包含内容
+
+- `swerve_bringup`：底盘系统启动文件和控制器配置
+- `swerve_hardware`：四轮Swerve Drive硬件接口（RS06转向电机\+UM轮毂电机）
+- `swerve_description`：底盘URDF模型
+- `livox_ros_driver2`：Livox MID-360激光雷达驱动（已集成用户配置自动读取）
+- `swerve_navigation`：SLAM建图和Nav2导航配置
+  - FAST-LIO2实时建图（带PGO回环检测）
+  - ICP定位
+  - Nav2自主导航和避障
+- CAN通信：can4（驱动电机）\+ can5（转向电机）
+
+### 应用场景
+
+- 全向移动底盘的精确运动控制
+- 室内环境SLAM建图和自主导航
+- 激光雷达点云采集和处理
+- 与双臂系统协同的移动操作
+
+### 技术特性
+
+- Swerve Drive算法实现全向移动
+- 用户配置自动读取 `~/.openflex/lidar_config.yaml`
+- 雷达IP配置简化（只需输入最后2位数字）
+- FAST-LIO2高精度实时建图
+- PGO回环检测优化地图
+- Nav2 DWB局部规划器
+
+## openflex\_head
+
+### 概述
+
+OpenFlex 2自由度头部子系统，采用Robstride RS00电机驱动，支持VR头显跟踪和独立控制。
+
+### 包含内容
+
+- `openarmx_head_bringup`：头部系统启动文件（100Hz控制频率）
+- `openarmx_head_hardware`：ros2\_control硬件接口，支持MIT/CSP双控制模式
+- `openarmx_head_description`：头部2-DOF URDF模型（yaw\+pitch）
+- `openarmx_head_teleop_vr_pico`：Pico VR头显跟踪控制
+- `openarmx_head_visio_h264`：头部相机H.264视频流转发
+- `openarmx_head_joint_slider_panel`：RViz2头部关节滑块控制面板
+- CAN通信：can2（2个RS00电机）
+
+### 应用场景
+
+- VR头显方向跟踪，头部实时跟随
+- 头部相机视频流实时转发到VR头显
+- 独立的头部关节位置控制
+- 与全身系统集成的协调运动
+
+### 技术特性
+
+- 关节限位：yaw ±90°，pitch ±90°
+- 最大速度：33 rad/s
+- 自动回零功能（启动时可选）
+- 软限位平滑过渡
+- 相对方向追踪模式
+
+## openflex\_lift\_slide
+
+### 概述
+
+OpenFlex单轴垂直升降台子系统，采用CANopen协议控制，提供腰部高度调节功能。
+
+### 包含内容
+
+- `lift_slide_hardware`：升降台CANopen硬件接口
+- `lift_slide_description`：升降台URDF模型
+- `lift_slide_msgs`：升降台消息定义
+- `lift_slide_panel`：RViz2升降台控制面板
+- CAN通信：can3（CANopen，Node ID 16）
+
+### 应用场景
+
+- 调节机器人腰部高度适应不同工作台面
+- VR遥操作中的腰部升降控制
+- 与底盘移动协同的全身运动
+
+### 技术特性
+
+- 行程范围：-0.650m ~ \+0.300m
+- 最大速度：0.10 m/s
+- 位置精度：±0.5mm
+- 限位开关保护
+- Home开关自动回零
+
+## openflex\_armx
+
+### 概述
+
+OpenFlex双7自由度机械臂子系统，基于openarmx-6.0\_basic，采用Robstride电机驱动，支持多种遥操作方式。
+
+### 包含内容
+
+- 参考 [openarmx-6.0\_basic](./openarmx-6.0_basic/README_CN.md) 完整文档
+- 双臂CAN通信：can1（左臂）\+ can2（右臂）
+- 集成MoveIt2运动规划
+- 支持VR、外骨骼、同构遥操作
+
+### 应用场景
+
+- 双臂协同操作和示教
+- VR沉浸式双臂遥操作
+- 轨迹录制和回放
+- VLA数据采集
+
+### 技术特性
+
+- 7-DOF × 2臂配置
+- Robstride电机CAN总线控制
+- MIT/CSP双控制模式
+- 重力补偿支持
+
+## openflex\_vr\_bridge
+
+### 概述
+
+Pico VR设备姿态桥接包，通过UDP接收VR手柄数据并发布为ROS 2话题，是VR遥操作的数据入口。
+
+### 包含内容
+
+- `pico_pose_bridge_node`（C\+\+）：UDP端口5100监听，发布手柄位姿、按键、扳机等话题
+- VR APK安装包
+  - Pico设备：`../openflex_vr_apk/apk/pico/OpenFlex.apk`
+  - Quest设备：`../openflex_vr_apk/apk/quest/openarmx-vr-quest.apk`
+- 支持双手柄6-DOF位姿跟踪
+- 按键映射：A键（回零）、B键、扳机、握把
+
+### 应用场景
+
+- 作为所有VR遥操作的数据源
+- 支持双臂VR IK遥操作
+- 头部VR跟踪
+- 底盘摇杆控制
+
+### 技术特性
+
+- UDP实时通信（~90Hz）
+- 低延迟姿态数据传输
+- 完整按键状态发布
+- TF树可选发布
+
+## openflex\_moveit\_nav2
+
+### 概述
+
+OpenFlex的MoveIt2运动规划和Nav2导航集成包，提供全身协调的运动规划和自主导航能力。
+
+### 包含内容
+
+- 双臂MoveIt2配置
+- Nav2导航参数配置
+- 全身协调规划接口
+- 移动操作集成
+
+### 应用场景
+
+- 双臂轨迹规划和避障
+- 底盘自主导航
+- 移动操作任务（导航\+抓取）
+
+### 技术特性
+
+- MoveIt2 OMPL规划器
+- Nav2 DWB控制器
+- 全身碰撞检测
+- 实时重规划
+
+## openflex\_vla
+
+### 概述
+
+基于LeRobot框架的视觉-语言-动作（VLA）数据采集和模型训练包，支持多相机数据同步采集和ACT模型训练。
+
+### 包含内容
+
+- 数据采集脚本 `lerobot_record_openflex.py`
+- 4路RealSense相机同步
+- VR遥操作数据记录
+- ACT模型训练配置
+- 推理部署脚本
+
+### 应用场景
+
+- VR遥操作示教数据采集
+- 双臂操作数据集构建
+- ACT模仿学习模型训练
+- 策略模型在线推理
+
+### 技术特性
+
+- 多相机时间同步
+- HDF5数据格式
+- 支持LeRobot生态
+- GPU训练加速
+
+# 🚀 快速开始
+
+## 安装
+
+```bash
+cd ~/openflex_all/openflex_ws
+# 交互式安装
+chmod +x ./install_openflex_drivers_and_build.sh
+./install_openflex_drivers_and_build.sh
+```

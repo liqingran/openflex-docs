@@ -45,10 +45,9 @@
   "navigation": {
     "groups": [
       {
-        "group": "OpenFlex",
-        "icon": "book-open",
+        "group": "openflex",
         "pages": [
-          "index"
+          "untitled-page"
         ]
       }
     ]
