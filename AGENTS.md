@@ -1,6 +1,6 @@
 [官方文档](http://docs.openarmx.com/) | [GitHub 组织](https://github.com/openarmx)
 
-![OpenFlex 封面](./assets/cover.png)
+![OpenFlex 封面](/images/cover.png)
 
 OpenFlex 是由成都长数机器人有限公司开发的开源全身人形机器人平台，基于 ROS 2 构建，集成双臂、移动底盘、升降台和头部系统，覆盖从机器人描述、底层驱动、VR遥操作到自主导航的完整技术栈。本页汇总了平台核心软件包的关键信息，帮助开发者快速定位所需模块。
 
